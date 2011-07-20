@@ -31,7 +31,22 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE:= libsqlite3_phonetic_string_utils_test
 
-LOCAL_CFLAGS += -Wall -Werror
+LOCAL_CFLAGS:= \
+                        -O3 \
+                        -pipe \
+                        -marm \
+                        -march=armv6zk \
+                        -mtune=arm1176jzf-s \
+                        -mfpu=vfp \
+                        -mfloat-abi=softfp \
+                        -fomit-frame-pointer \
+                        -funsafe-loop-optimizations \
+                        -funsafe-math-optimizations \
+                        -funroll-loops \
+                        -fpeel-loops \
+                        -fbranch-target-load-optimize2 \
+                        -Wall \
+                        -Werror
 
 LOCAL_SRC_FILES := \
 	PhoneticStringUtils.cpp \
@@ -62,7 +77,22 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE:= libsqlite3_phone_number_utils_test
 
-LOCAL_CFLAGS += -Wall -Werror
+LOCAL_CFLAGS:= \
+                        -O3 \
+                        -pipe \
+                        -marm \
+                        -march=armv6zk \
+                        -mtune=arm1176jzf-s \
+                        -mfpu=vfp \
+                        -mfloat-abi=softfp \
+                        -fomit-frame-pointer \
+                        -funsafe-loop-optimizations \
+                        -funsafe-math-optimizations \
+                        -funroll-loops \
+                        -fpeel-loops \
+                        -fbranch-target-load-optimize2 \
+                        -Wall \
+                        -Werror
 
 LOCAL_SRC_FILES := \
 	PhoneNumberUtils.cpp \
