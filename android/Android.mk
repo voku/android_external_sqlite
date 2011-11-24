@@ -29,9 +29,9 @@ endif
 # Test for PhoneticStringUtils
 include $(CLEAR_VARS)
 
-LOCAL_MODULE:= libsqlite3_phonetic_string_utils_test
+LOCAL_MODULE := libsqlite3_phonetic_string_utils_test
 
-LOCAL_CFLAGS:= \
+LOCAL_CFLAGS+= \
                         -O3 \
                         -pipe \
                         -marm \
