@@ -23,7 +23,7 @@ ifneq ($(TARGET_ARCH),arm)
 LOCAL_LDLIBS += -lpthread -ldl
 endif
 
-LOCAL_CFLAGS += $(sqlite_cflags)
+LOCAL_CFLAGS += $(sqlite_cflags) 
 
 ifneq ($(TARGET_SIMULATOR),true)
 LOCAL_SHARED_LIBRARIES := libdl

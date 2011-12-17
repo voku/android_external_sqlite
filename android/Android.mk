@@ -80,11 +80,6 @@ LOCAL_CFLAGS:= \
                         -mfpu=vfp \
                         -mfloat-abi=softfp \
                         -fomit-frame-pointer \
-                        -funsafe-loop-optimizations \
-                        -funsafe-math-optimizations \
-                        -funroll-loops \
-                        -fpeel-loops \
-                        -fbranch-target-load-optimize2 \
                         -Wall \
                         -Werror
 
