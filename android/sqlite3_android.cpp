@@ -62,7 +62,7 @@ static int collate8(void *p, int n1, const void *v1, int n2, const void *v2)
     UCollationResult result = ucol_strcollIter(coll, &i1, &i2, &status);
 
     if (U_FAILURE(status)) {
-//        LOGE("Collation iterator error: %d\n", status);
+//        ALOGE("Collation iterator error: %d\n", status);
     }
 
     if (result == UCOL_LESS) {
@@ -212,17 +212,33 @@ static void delete_file(sqlite3_context * context, int argc, sqlite3_value ** ar
     }
 
     char const * path = (char const *)sqlite3_value_text(argv[0]);
-    char const * external_storage = getenv("EXTERNAL_STORAGE");
-    if (path == NULL || external_storage == NULL) {
+    // Don't allow ".." in paths
+    if (path == NULL || strstr(path, "/../") != NULL) {
         sqlite3_result_null(context);
         return;
     }
 
-    if (strncmp(external_storage, path, strlen(external_storage)) != 0) {
-        sqlite3_result_null(context);
-        return;
+    // We only allow deleting files in the EXTERNAL_STORAGE path, or one of the
+    // SECONDARY_STORAGE paths
+    bool good_path = false;
+    char const * external_storage = getenv("EXTERNAL_STORAGE");
+    if (external_storage && strncmp(external_storage, path, strlen(external_storage)) == 0) {
+        good_path = true;
+    } else {
+        // check SECONDARY_STORAGE, which should be a colon separated list of paths
+        char const * secondary_paths = getenv("SECONDARY_STORAGE");
+        while (secondary_paths && secondary_paths[0]) {
+            const char* colon = strchr(secondary_paths, ':');
+            int length = (colon ? colon - secondary_paths : strlen(secondary_paths));
+            if (strncmp(secondary_paths, path, length) == 0) {
+                good_path = true;
+            }
+            secondary_paths += length;
+            while (*secondary_paths == ':') secondary_paths++;
+        }
     }
-    if (strstr(path, "/../") != NULL) {
+
+    if (!good_path) {
         sqlite3_result_null(context);
         return;
     }
@@ -289,13 +305,13 @@ struct SqliteUserData {
  */
 static void tokenize(sqlite3_context * context, int argc, sqlite3_value ** argv)
 {
-    //LOGD("enter tokenize");
+    //ALOGD("enter tokenize");
     int err;
     int useTokenIndex = 0;
     int useDataTag = 0;
 
     if (!(argc >= 4 || argc <= 6)) {
-        LOGE("Tokenize requires 4 to 6 arguments");
+        ALOGE("Tokenize requires 4 to 6 arguments");
         sqlite3_result_null(context);
         return;
     }
@@ -312,7 +328,7 @@ static void tokenize(sqlite3_context * context, int argc, sqlite3_value ** argv)
     UCollator* collator = (UCollator*)sqlite3_user_data(context);
     char const * tokenTable = (char const *)sqlite3_value_text(argv[0]);
     if (tokenTable == NULL) {
-        LOGE("tokenTable null");
+        ALOGE("tokenTable null");
         sqlite3_result_null(context);
         return;
     }
@@ -329,7 +345,7 @@ static void tokenize(sqlite3_context * context, int argc, sqlite3_value ** argv)
         err = sqlite3_prepare_v2(handle, sql, -1, &statement, NULL);
         sqlite3_free(sql);
         if (err) {
-            LOGE("prepare failed");
+            ALOGE("prepare failed");
             sqlite3_result_null(context);
             return;
         }
@@ -346,7 +362,7 @@ static void tokenize(sqlite3_context * context, int argc, sqlite3_value ** argv)
     int64_t rowID = sqlite3_value_int64(argv[1]);
     err = sqlite3_bind_int64(statement, 2, rowID);
     if (err != SQLITE_OK) {
-        LOGE("bind failed");
+        ALOGE("bind failed");
         sqlite3_result_null(context);
         return;
     }
@@ -356,7 +372,7 @@ static void tokenize(sqlite3_context * context, int argc, sqlite3_value ** argv)
         int dataTagParamIndex = useTokenIndex ? 4 : 3;
         err = sqlite3_bind_value(statement, dataTagParamIndex, argv[5]);
         if (err != SQLITE_OK) {
-            LOGE("bind failed");
+            ALOGE("bind failed");
             sqlite3_result_null(context);
             return;
         }
@@ -374,7 +390,7 @@ static void tokenize(sqlite3_context * context, int argc, sqlite3_value ** argv)
     // Get the raw bytes for the delimiter
     const UChar * delim = (const UChar *)sqlite3_value_text16(argv[3]);
     if (delim == NULL) {
-        LOGE("can't get delimiter");
+        ALOGE("can't get delimiter");
         sqlite3_result_null(context);
         return;
     }
@@ -395,7 +411,7 @@ static void tokenize(sqlite3_context * context, int argc, sqlite3_value ** argv)
         uint32_t result = ucol_getSortKey(collator, token, -1, (uint8_t*)keybuf, sizeof(keybuf)-1);
         if (result > sizeof(keybuf)) {
             // TODO allocate memory for this super big string
-            LOGE("ucol_getSortKey needs bigger buffer %d", result);
+            ALOGE("ucol_getSortKey needs bigger buffer %d", result);
             break;
         }
         uint32_t keysize = result-1;
@@ -405,7 +421,7 @@ static void tokenize(sqlite3_context * context, int argc, sqlite3_value ** argv)
         err = sqlite3_bind_text(statement, 1, base16buf, base16Size, SQLITE_STATIC);
 
         if (err != SQLITE_OK) {
-            LOGE(" sqlite3_bind_text16 error %d", err);
+            ALOGE(" sqlite3_bind_text16 error %d", err);
             free(base16buf);
             break;
         }
@@ -413,7 +429,7 @@ static void tokenize(sqlite3_context * context, int argc, sqlite3_value ** argv)
         if (useTokenIndex) {
             err = sqlite3_bind_int(statement, 3, numTokens);
             if (err != SQLITE_OK) {
-                LOGE(" sqlite3_bind_int error %d", err);
+                ALOGE(" sqlite3_bind_int error %d", err);
                 free(base16buf);
                 break;
             }
@@ -423,7 +439,7 @@ static void tokenize(sqlite3_context * context, int argc, sqlite3_value ** argv)
         free(base16buf);
 
         if (err != SQLITE_DONE) {
-            LOGE(" sqlite3_step error %d", err);
+            ALOGE(" sqlite3_step error %d", err);
             break;
         }
         numTokens++;
