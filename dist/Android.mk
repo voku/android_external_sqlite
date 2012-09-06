@@ -28,7 +28,11 @@ common_sqlite_flags := \
 	-DSQLITE_OMIT_COMPILEOPTION_DIAGS \
 	-DSQLITE_OMIT_LOAD_EXTENSION \
 	-DSQLITE_DEFAULT_FILE_PERMISSIONS=0600 \
-	-Dfdatasync=fdatasync
+	-Dfdatasync=fdatasync \
+	-march=armv7-a \
+	-mfloat-abi=softfp \
+	-mfpu=neon \
+	-O3
 
 common_src_files := sqlite3.c
 
